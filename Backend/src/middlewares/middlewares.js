@@ -1,16 +1,19 @@
-const pool = require('../config/db')
+const pool = require('../config/db');
+const { SECRET } = process.env;
+const bcrypt = require('bcryptjs');
 
 const validator = async (req, res, next) => {
     try {
         const getQuery = await pool.query('SELECT * FROM usuarios')
-        if(!getQuery.rows){
+        if(!getQuery.rows.length){
             console.log("tabla vacia, se procede a ingresar el primer dato")
             return getQuery, next()
         } else {
             const searchEmail = getQuery.rows.find(row => row.email === req.body.email);
-            const searchId = getQuery.rows.find(row => row.id == req.body.id )
+            const searchId = getQuery.rows.find(row => row.id == req.body.id );
             if((searchEmail != undefined) || (searchId != undefined)) {
-                return res.send("el usuario ya se encuentra registrado")
+                console.log("el usuario ya se encuentra registrado");
+                return res.status(401).send("el usuario ya se encuentra registrado");
             }
         }
         return next()
@@ -20,13 +23,14 @@ const validator = async (req, res, next) => {
     }
 }
 
+// aca se detecta un problema en el front, debido a que si el ingreso de usuario o contraeña son incorrectos, se deberia retornar a la pagina de registro y no a la de usuario, al igual que el alert que indica "usuario registrado con exito"
 const validatorLogin = async(req, res, next) => {
         const getQuery = await pool.query('SELECT * FROM usuarios')
         const email = req.body.email
-        const password = req.body.password
-        const findUser = getQuery.rows.find(row => (row.email == email) && (row.password == password) )
-        if(findUser == undefined) {
-            return res.send("usuario o contraseña incorrectos")
+        const password = req.body.password;
+        const findUser = getQuery.rows.find(row => row.email == email)
+        if(!findUser || !bcrypt.compareSync(password, findUser.password)) {
+            return res.status(401).send("Usuario o contraseña incorrectos");
         } else {
             next()
         }
