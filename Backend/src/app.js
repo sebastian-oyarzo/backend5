@@ -4,7 +4,7 @@ const app = express();
 require('dotenv').config();
 const morgan = require('morgan');
 const router = require('./routes/routes');
-const JWT = require("jsonwebtoken");
+
 const { PORT } = process.env;
 
 app.use(cors());

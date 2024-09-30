@@ -5,11 +5,10 @@ const JWT = require("jsonwebtoken");
 const bcrypt = require('bcryptjs');
 const { SECRET } = process.env;
 
-
 const register = async (req, res) => {
     try {
-        const data = req.body
-        const passwordEncripted = bcrypt.hashSync(req.body.password)
+        const data = req.body;
+        const passwordEncripted = bcrypt.hashSync(req.body.password);
         let pushQuery = format(`INSERT INTO usuarios (email, password, rol, lenguage) VALUES ('%s', '%s', '%s', '%s')`, data.email, passwordEncripted, data.rol, data.lenguage );
         await pool.query(pushQuery);
         const getQuery = await pool.query('SELECT * FROM usuarios ORDER BY ID DESC LIMIT 10');
@@ -41,22 +40,17 @@ const getUsuarios = async (req, res) => {
         if (keys[1] != undefined) {
             const verification = JWT.verify(keys[1], SECRET);
 
-            const email = verification.email;  // Extraer email desde el token
-
+            const email = verification.email;
+            //el siguiente paso usando decode se realizo por que el desafio lo solicita, pero es posible usar directamente en metodo verify
             const decoded = JWT.decode(keys[1]);
             console.log("email decodificado:", decoded);
 
-            // Ejecutar consulta para obtener todos los usuarios
             const getQuery = await pool.query('SELECT * FROM usuarios');
-
-            // Buscar al usuario con el email del token
             const findUser = getQuery.rows.find(row => row.email == email);
-
             if (!findUser) {
                 return res.status(404).send("Usuario no encontrado");
             }
 
-            // Responder con los datos del usuario encontrado
             res.json([findUser]);
         } else {
             res.status(400).send("Token de autenticación faltante");
@@ -66,6 +60,5 @@ const getUsuarios = async (req, res) => {
         res.status(403).send("Token inválido o malformado");
     }
 }
-
 
 module.exports = { register, login, getUsuarios }

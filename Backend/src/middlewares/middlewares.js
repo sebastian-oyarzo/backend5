@@ -23,16 +23,20 @@ const validator = async (req, res, next) => {
     }
 }
 
-// aca se detecta un problema en el front, debido a que si el ingreso de usuario o contraeña son incorrectos, se deberia retornar a la pagina de registro y no a la de usuario, al igual que el alert que indica "usuario registrado con exito"
 const validatorLogin = async(req, res, next) => {
-        const getQuery = await pool.query('SELECT * FROM usuarios')
-        const email = req.body.email
-        const password = req.body.password;
-        const findUser = getQuery.rows.find(row => row.email == email)
-        if(!findUser || !bcrypt.compareSync(password, findUser.password)) {
-            return res.status(401).send("Usuario o contraseña incorrectos");
-        } else {
-            next()
+        try {
+            const getQuery = await pool.query('SELECT * FROM usuarios')
+            const email = req.body.email
+            const password = req.body.password;
+            const findUser = getQuery.rows.find(row => row.email == email)
+            if(!findUser || !bcrypt.compareSync(password, findUser.password)) {
+                return res.status(401).send("Usuario o contraseña incorrectos");
+            } else {
+                next()
+            }
+        } catch (error) {
+            console.log(error)
+            res.status(500).send(error)
         }
 }
 
